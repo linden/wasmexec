@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<script>
+	// fetch wasm exec.
+	import("/wasm_exec.js").then(async () => {
+		// create a new program.
+		const go = new Go();
+
+		// add the program arguments.
+		go.argv = [{{range $i, $item := .Args}} {{if $i}}, {{end}} "{{$item}}" {{end}}];
+
+		// stream the runtime.
+		const { instance } = await WebAssembly.instantiateStreaming(fetch("main.wasm"), go.importObject);
+
+		// execute the program.
+		await go.run(instance);
+
+		console.log("wasmexec:exit");
+	});
+</script>
