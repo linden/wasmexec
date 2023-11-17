@@ -12,6 +12,7 @@ import (
 	"path"
 	"runtime"
 	"strconv"
+	_ "unsafe"
 
 	cdruntime "github.com/chromedp/cdproto/runtime"
 	"github.com/chromedp/chromedp"
@@ -24,6 +25,9 @@ func init() {
 	log.SetFlags(0)
 	log.SetPrefix("wasmexec: ")
 }
+
+//go:linkname runtime_addExitHook runtime.addExitHook
+func runtime_addExitHook(f func(), runOnNonZeroExit bool)
 
 func main() {
 	if len(os.Args) < 2 {
@@ -86,6 +90,12 @@ func main() {
 	// create a new chrome instance.
 	ctx, cancel := chromedp.NewContext(context.Background())
 	defer cancel()
+
+	// defer only runs when we finish the program or we panic, Go doesn't provide a public way to handle an exit event.
+	// we use the private runtime exit hook here to ensure Chrome has been quit.
+	runtime_addExitHook(func() {
+		chromedp.Cancel(ctx)
+	}, true)
 
 	done := make(chan bool, 1)
 
