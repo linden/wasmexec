@@ -190,7 +190,7 @@ func (fs *FS) read(dec decoder) []any {
 		return []any{err.Error()}
 	}
 
-	return []any{nil, n, string(b)}
+	return []any{nil, n, b}
 }
 
 func (fs *FS) readdir(dec decoder) []any {

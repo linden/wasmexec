@@ -130,8 +130,13 @@
 						return callback(args[0]);
 					}
 
-					// encode the value.
-					const value = encoder.encode(args[2]);
+					// decode the value.
+					const value = Uint8Array.from(
+						// []byte is always encoded in base64.
+						atob(args[2]),
+						// https://developer.mozilla.org/en-US/docs/Glossary/Base64#the_unicode_problem.
+						(c) => c.codePointAt(0)
+					);
 
 					// update the buffer.
 					buffer.set(value);
