@@ -29,6 +29,7 @@
 					error.code = "EFAULT";
 
 					callback(error);
+					return;
 				}
 
 				callback(...result);
