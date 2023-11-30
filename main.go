@@ -54,7 +54,20 @@ func main() {
 		log.Fatal(err)
 	}
 
+	// wether or not to forward the file system.
+	ffs := false
+
+	// always forward the file system on tests.
+	if path.Ext(p) == ".test" {
+		ffs = true
+	}
+
 	mux := http.NewServeMux()
+
+	cwd, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	// serve index.html.
 	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
@@ -62,8 +75,24 @@ func main() {
 
 		err := tmpl.Execute(w, struct {
 			Args []string
+
+			FS    bool
+			CWD   string
+			Flags map[string]int
 		}{
 			Args: os.Args[2:],
+
+			FS:  ffs,
+			CWD: cwd,
+			// https://github.com/golang/go/blob/1cc19e5ba0a008df7baeb78e076e43f9d8e0abf2/src/syscall/fs_js.go#L24-L31.
+			Flags: map[string]int{
+				"O_WRONLY": os.O_WRONLY,
+				"O_RDWR":   os.O_RDWR,
+				"O_CREAT":  os.O_CREATE,
+				"O_TRUNC":  os.O_TRUNC,
+				"O_APPEND": os.O_APPEND,
+				"O_EXCL":   os.O_EXCL,
+			},
 		})
 
 		if err != nil {
@@ -82,6 +111,10 @@ func main() {
 		w.Header().Set("content-type", "application/wasm")
 		w.Write(wf)
 	})
+
+	if ffs {
+		mux.Handle("/fs/", &FS{})
+	}
 
 	// create a testing server with a using random port.
 	srv := httptest.NewServer(mux)

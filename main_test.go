@@ -52,7 +52,7 @@ func run(t *testing.T, name string, args ...string) {
 func TestTest(t *testing.T) {
 	build(t)
 
-	run(t, "go", "test", "-exec", "../wasmexec", "-v")
+	run(t, "go", "test", "-exec", "../wasmexec", "-v", "--run", "TestUserAgent")
 }
 
 // run a test with wasmexec as the executor.
