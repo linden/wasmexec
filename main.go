@@ -87,8 +87,18 @@ func main() {
 	srv := httptest.NewServer(mux)
 	defer srv.Close()
 
+	args := chromedp.DefaultExecAllocatorOptions[:]
+	env := os.Getenv("WASMEXEC_HEADLESS")
+
+	if strings.ToLower(env) == "false" || env == "0" {
+		args = append(args, chromedp.Flag("headless", false))
+	}
+
+	exec, cancel := chromedp.NewExecAllocator(context.Background(), args...)
+	defer cancel()
+
 	// create a new chrome instance.
-	ctx, cancel := chromedp.NewContext(context.Background())
+	ctx, cancel := chromedp.NewContext(exec)
 	defer cancel()
 
 	// defer only runs when we finish the program or we panic, Go doesn't provide a public way to handle an exit event.
