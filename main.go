@@ -8,10 +8,12 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"os"
 	"path"
 	"runtime"
 	"strconv"
+	"strings"
 	_ "unsafe"
 
 	cdruntime "github.com/chromedp/cdproto/runtime"
@@ -142,8 +144,18 @@ func main() {
 		}
 	})
 
+	// parse the server URL.
+	u, err := url.Parse(srv.URL)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// change the host to localhost from 127.0.0.1, as it's treated as a secure context in chrome.
+	// https://github.com/chromium/chromium/blob/bc3997b37babf6be84386bcaf780d81af5f4dcfb/services/network/public/cpp/is_potentially_trustworthy.cc#L304-L310.
+	u.Host = "localhost:" + u.Port()
+
 	// launch chrome and navigate to the homepage.
-	err = chromedp.Run(ctx, chromedp.Navigate(srv.URL))
+	err = chromedp.Run(ctx, chromedp.Navigate(u.String()))
 	if err != nil {
 		log.Fatal(err)
 	}
